@@ -1,47 +1,42 @@
-# agents/translator_agent.py
-import os
-from dotenv import load_dotenv
-import google.generativeai as genai
-from google.api_core import exceptions # Import for specific error handling
 
-# Load environment variables from .env file
+import os
+import google.generativeai as genai
+from dotenv import load_dotenv
+
 load_dotenv()
 
-# Get API key and ensure it exists
-API_KEY = os.getenv("satkriti_api")
-if not API_KEY:
-    raise ValueError("API_KEY not found in environment variables or .env file. Please set it.")
-
-# Configure the generative AI model with the API key
-genai.configure(api_key=API_KEY)
-
-def translate_english_to_nepali(text: str) -> str:
+class TranslatorAgent:
     """
-    Translates an English sentence to Nepali using a stable Gemini model.
-
-    Args:
-        text (str): The English sentence to translate.
-
-    Returns:
-        str: The translated Nepali sentence, or an error message if translation fails.
+    Handles translation between English and Nepali using the Google Gemini API.
     """
-    # Changed model to gemini-2.5-flash-preview-05-20 for wider availability and stability
-    model = genai.GenerativeModel("gemini-2.5-flash-preview-05-20")
-    
-    # --- MODIFIED PROMPT HERE ---
-    # Instruct the model to provide ONLY the Nepali translation.
-    prompt = f"Translate the following English sentence into Nepali. Provide only the Nepali translation, without any additional explanations or formatting:\n\n{text}"
-    
-    try:
-        # Generate content using the model
-        response = model.generate_content(prompt)
-        # Return the translated text, stripping any leading/trailing whitespace
-        return response.text.strip()
-    except exceptions.GoogleAPIError as e:
-        # Handle specific Google API errors (e.g., quota issues, invalid requests)
-        print(f"An API error occurred during translation: {e}")
-        return "Translation failed due to an API error."
-    except Exception as e:
-        # Handle any other unexpected errors
-        print(f"An unexpected error occurred during translation: {e}")
-        return "Translation failed due to an unexpected error."
+    def __init__(self):
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError("GOOGLE_API_KEY environment variable not set. Please create a .env file and add your Gemini API key.")
+        
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel('models/gemini-2.5-pro') 
+
+    def _translate(self, text: str, target_language: str) -> str:
+        
+        prompt = f"Only give the exact translation of the following text to {target_language}, without any explanation or extra text:\n\n{text}"
+        try:
+            response = self.model.generate_content(prompt)
+            
+            if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+                return response.candidates[0].content.parts[0].text.strip()
+            else:
+                return ""
+        except Exception as e:
+            
+            print(f"Error during translation with Gemini API: {e}")
+            return ""
+
+    def translate_english_to_nepali(self, text: str) -> str:
+        
+        return self._translate(text, "Nepali")
+
+    def translate_nepali_to_english(self, text: str) -> str:
+        
+        return self._translate(text, "English")
+

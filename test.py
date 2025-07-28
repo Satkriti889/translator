@@ -1,6 +1,6 @@
-# Add this to any file temporarily
-import os
-from dotenv import load_dotenv
+from fastapi import FastAPI
+app = FastAPI()
 
-load_dotenv()
-print("OPENAI API KEY:", os.getenv("OPENAI_API_KEY"))
+@app.get("/")
+def home():
+    return {"message": "Hello World"}
