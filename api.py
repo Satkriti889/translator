@@ -6,31 +6,26 @@ from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from datetime import datetime
 
-# Load environment variables
 load_dotenv()
 
-# Initialize application
+
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-# Initialize services
 from agents.translator_agent import TranslatorAgent
 from agents.vector_store import VectorStore
 
 translator = TranslatorAgent()
 vector_db = VectorStore()
 
-# Models
 class TranslationRequest(BaseModel):
     text: str
     direction: str = "en_to_ne"
 
-# Core Endpoints
 @app.post("/api/translate")
 async def api_translate(request: TranslationRequest):
     """Basic translation endpoint with caching"""
     try:
-        # Check cache first
         similar = vector_db.search_similar(request.text, k=1)
         if similar:
             return {
@@ -39,7 +34,6 @@ async def api_translate(request: TranslationRequest):
                 "direction": request.direction
             }
 
-        # Perform translation
         if request.direction == "en_to_ne":
             translated_text = translator.translate_english_to_nepali(request.text)
         else:
@@ -48,7 +42,6 @@ async def api_translate(request: TranslationRequest):
         if not translated_text:
             raise HTTPException(status_code=400, detail="Translation failed")
 
-        # Store in cache
         vector_db.add_translation(request.text, translated_text)
         
         return {
