@@ -6,9 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class TranslatorAgent:
-    """
-    Handles translation between English and Nepali using the Google Gemini API.
-    """
+   
     def __init__(self):
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:

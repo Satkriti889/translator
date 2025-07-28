@@ -6,7 +6,6 @@ class VectorStore:
     performing exact match lookups instead of semantic similarity.
     """
     def __init__(self):
-        # The cache stores original_text -> translated_text mappings
         self._cache = {}
 
     def add_translation(self, original_text: str, translated_text: str):
